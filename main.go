@@ -1,13 +1,15 @@
 package main
 
 import (
-	"github.com/gorilla/mux"
 	"net/http"
-
 	"os"
 	"io"
 	"html/template"
 	"fmt"
+	"github.com/gorilla/mux"
+	"./ffmpeg"
+	"strings"
+	"path/filepath"
 )
 
 //Compile templates on start
@@ -18,7 +20,16 @@ func display(w http.ResponseWriter, tmpl string, data interface{}) {
 	templates.ExecuteTemplate(w, tmpl+".html", data)
 }
 
+const (
+	temp = "temp/"
+	videos = "videos/"
+)
 
+func init() {
+
+	os.Mkdir(temp, 0777)
+	os.Mkdir(videos, 0777)
+}
 
 func main() {
 
@@ -90,7 +101,9 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			//create destination file making sure the path is writeable.
-			dst, err := os.Create("uploads/" + files[i].Filename)
+			tempfile := temp + files[i].Filename
+			filename :=  files[i].Filename
+			dst, err := os.Create(tempfile)
 			defer dst.Close()
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -101,7 +114,10 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-
+			perminentfile := videos + strings.TrimSuffix(filename, filepath.Ext(filename)) + ".mp4"
+			ffmpeg.Encode("./ffmpeg/ffmpeg", tempfile, perminentfile, "320x240")
+			fmt.Println(perminentfile)
+			os.Remove(tempfile)
 		}
 		//display success message.
 		display(w, "upload", "Upload successful.")
@@ -109,6 +125,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
 }
+
 
 
 
