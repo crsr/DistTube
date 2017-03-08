@@ -41,3 +41,15 @@ From $GOPATH/src/github.com/pwed/disttube, run `go run main.go` in your terminal
 Open `localhost:8080` in your browser.
 
 Have fun.
+
+## TODO
+
+- [x] Ingestion _(is mostly working :D )_
+- [ ] Users
+- [ ] Channels
+- [ ] Video Player
+- [ ] Video Browser
+- [ ] Admin Tools
+- [ ] Config File Setup
+- [ ] Docker Container
+- [ ] Aggregation Server
