@@ -7,7 +7,7 @@ import (
 	"html/template"
 	"fmt"
 	"github.com/gorilla/mux"
-	"./ffmpeg"
+	"github.com/pwed/disttube/ffmpeg"
 	"strings"
 	"path/filepath"
 )
@@ -114,16 +114,38 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			perminentfile := videos + strings.TrimSuffix(filename, filepath.Ext(filename)) + ".mp4"
-			ffmpeg.Encode("./ffmpeg/ffmpeg", tempfile, perminentfile, "320x240")
+			perminentfile := videos + strings.TrimSuffix(filename, filepath.Ext(filename))
+
+			//go ingest("ffmpeg", tempfile, perminentfile, "320x240")
+
+			go batchIngest("ffmpeg", tempfile, perminentfile)
+
 			fmt.Println(perminentfile)
-			os.Remove(tempfile)
 		}
 		//display success message.
 		display(w, "upload", "Upload successful.")
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
+}
+
+//func ingest(f string, i string, o string, s string) {
+//	err := ffmpeg.Encode(f, i, o + ".mp4", s)
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//	os.Remove(i)
+//}
+
+func batchIngest(f string, i string, o string) {
+	ffmpeg.BatchEncode(f, i,
+		"480x234", o + "_234p.mp4",
+		"640x360", o + "_360p.mp4",
+		"1280x720", o + "_720p.mp4",
+		"1920x1080", o + "_1080p.mp4",
+		"2560x1440", o + "_1440p.mp4",
+		"3840x2160", o + "_2160p.mp4")
+	os.Remove(i)
 }
 
 
