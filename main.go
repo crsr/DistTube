@@ -1,15 +1,18 @@
 package main
 
 import (
-	"net/http"
-	"os"
 	"io"
-	"html/template"
+	"os"
 	"fmt"
-	"github.com/gorilla/mux"
-	"github.com/pwed/disttube/ffmpeg"
 	"strings"
+	"net/http"
+	"encoding/json"
+	"html/template"
 	"path/filepath"
+
+	"github.com/gorilla/mux"
+
+	"github.com/pwed/disttube/ffmpeg"
 )
 
 //Compile templates on start
@@ -20,20 +23,30 @@ func display(w http.ResponseWriter, tmpl string, data interface{}) {
 	templates.ExecuteTemplate(w, tmpl+".html", data)
 }
 
-const (
-	temp = "temp/"
-	videos = "videos/"
-)
+type config struct {
+	Port         string      `json:"port"`
+	VideoDir     string      `json:"video_dir"`
+	TempDir      string      `json:"temp_dir"`
+}
+
+var c = config{":8080", "videos/", "temp/"}
+
 
 func init() {
+	configFile, err := os.Open("config.json")
+	defer configFile.Close()
+	if err != nil {
 
-	os.Mkdir(temp, 0777)
-	os.Mkdir(videos, 0777)
+	}
+	jsonParser := json.NewDecoder(configFile)
+	if err = jsonParser.Decode(&c); err != nil {
+		fmt.Printf("parsing config file: %e", err.Error())
+	}
+	os.Mkdir(c.VideoDir, 0777)
+	os.Mkdir(c.TempDir, 0777)
 }
 
 func main() {
-
-	fmt.Println("test")
 	mx := mux.NewRouter()
 
 	mx.HandleFunc("/",
@@ -64,15 +77,11 @@ func main() {
 	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("assets"))))
 
 
-
-
-	fmt.Println("test")
-	http.ListenAndServe(":8080", mx)
+	http.ListenAndServe(c.Port, mx)
 }
 
 //This is where the action happens.
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("test")
 	switch r.Method {
 	//GET displays the upload form.
 	case "GET":
@@ -101,7 +110,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			//create destination file making sure the path is writeable.
-			tempfile := temp + files[i].Filename
+			tempfile := c.TempDir + files[i].Filename
 			filename :=  files[i].Filename
 			dst, err := os.Create(tempfile)
 			defer dst.Close()
@@ -114,7 +123,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			perminentFile := videos + strings.TrimSuffix(filename, filepath.Ext(filename))
+			perminentFile := c.VideoDir + strings.TrimSuffix(filename, filepath.Ext(filename))
 
 			go ffmpeg.SequentialBatchIngest("ffmpeg", tempfile, perminentFile)
 

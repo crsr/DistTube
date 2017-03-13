@@ -3,9 +3,9 @@ package ffprobe
 
 
 import (
-	"encoding/json"
-	"os/exec"
 	"time"
+	"os/exec"
+	"encoding/json"
 )
 
 

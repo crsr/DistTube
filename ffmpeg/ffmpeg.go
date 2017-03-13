@@ -1,11 +1,12 @@
 package ffmpeg
 
 import (
-	"fmt"
-	"os/exec"
-	"errors"
 	"os"
+	"fmt"
 	"log"
+	"errors"
+	"os/exec"
+
 	"github.com/pwed/disttube/ffprobe"
 )
 
