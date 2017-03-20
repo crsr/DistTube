@@ -10,6 +10,7 @@ import (
 	"github.com/pwed/disttube/ffprobe"
 )
 
+//Encodes a single file to a given resolution and output file
 func Encode(ffmpegLocation string, input string, resolution string, output string) error {
 	out, err := exec.Command(ffmpegLocation, "-y", "-i", input, "-s:v",
 		resolution, output).Output()

@@ -1,14 +1,14 @@
 package main
 
 import (
-	"io"
-	"os"
-	"fmt"
-	"strings"
-	"net/http"
 	"encoding/json"
+	"fmt"
 	"html/template"
+	"io"
+	"net/http"
+	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/gorilla/mux"
 
@@ -23,15 +23,19 @@ func display(w http.ResponseWriter, tmpl string, data interface{}) {
 	templates.ExecuteTemplate(w, tmpl+".html", data)
 }
 
+//A struct containing the configuration parameters of the running program
 type config struct {
-	Port         string      `json:"port"`
-	VideoDir     string      `json:"video_dir"`
-	TempDir      string      `json:"temp_dir"`
+	Port     string `json:"port"`
+	VideoDir string `json:"video_dir"`
+	TempDir  string `json:"temp_dir"`
 }
+//Default config values
+var conf = config{
+	":8080",
+	"videos/",
+	"temp/"}
 
-var c = config{":8080", "videos/", "temp/"}
-
-
+//Set up the environment before running the application
 func init() {
 	configFile, err := os.Open("config.json")
 	defer configFile.Close()
@@ -39,30 +43,31 @@ func init() {
 
 	}
 	jsonParser := json.NewDecoder(configFile)
-	if err = jsonParser.Decode(&c); err != nil {
-		fmt.Printf("parsing config file: %e", err.Error())
+	if err = jsonParser.Decode(&conf); err != nil {
+		fmt.Printf("parsing config file: %v", err.Error())
 	}
-	os.Mkdir(c.VideoDir, 0777)
-	os.Mkdir(c.TempDir, 0777)
+	os.Mkdir(conf.VideoDir, 0777)
+	os.Mkdir(conf.TempDir, 0777)
 }
 
+//main :)
 func main() {
 	mx := mux.NewRouter()
 
 	mx.HandleFunc("/",
-		func(w http.ResponseWriter, r *http.Request){
+		func(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte("hello"))
 		})
 
 	mx.HandleFunc("/channel/{channel}",
-		func(w http.ResponseWriter, r *http.Request){
+		func(w http.ResponseWriter, r *http.Request) {
 			v := mux.Vars(r)
 			channel := v["channel"]
 
 			w.Write([]byte("the channel is " + channel))
 		})
 	mx.HandleFunc("/channel/{channel}/video/{video}",
-		func(w http.ResponseWriter, r *http.Request){
+		func(w http.ResponseWriter, r *http.Request) {
 			v := mux.Vars(r)
 			channel := v["channel"]
 			video := v["video"]
@@ -71,16 +76,14 @@ func main() {
 			w.Write([]byte("\nthe video is " + video))
 		})
 
-
 	mx.HandleFunc("/upload", uploadHandler)
 
-	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("assets"))))
+	mx.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("assets"))))
 
-
-	http.ListenAndServe(c.Port, mx)
+	http.ListenAndServe(conf.Port, mx)
 }
 
-//This is where the action happens.
+//Handles multi file video uploads and passes them on to the video transcoder
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	//GET displays the upload form.
@@ -99,20 +102,20 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		//get a ref to the parsed multipart form
 		m := r.MultipartForm
 
-		//get the *fileheaders
+		//get the *fileHeaders
 		files := m.File["myfiles"]
 		for i, _ := range files {
-			//for each fileheader, get a handle to the actual file
+			//for each fileHeader, get a handle to the actual file
 			file, err := files[i].Open()
 			defer file.Close()
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			//create destination file making sure the path is writeable.
-			tempfile := c.TempDir + files[i].Filename
-			filename :=  files[i].Filename
-			dst, err := os.Create(tempfile)
+			//create destination file making sure the path is writable.
+			tempFile := conf.TempDir + files[i].Filename
+			filename := files[i].Filename
+			dst, err := os.Create(tempFile)
 			defer dst.Close()
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -123,9 +126,9 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			perminentFile := c.VideoDir + strings.TrimSuffix(filename, filepath.Ext(filename))
+			perminentFile := conf.VideoDir + strings.TrimSuffix(filename, filepath.Ext(filename))
 
-			go ffmpeg.SequentialBatchIngest("ffmpeg", tempfile, perminentFile)
+			go ffmpeg.SequentialBatchIngest("ffmpeg", tempFile, perminentFile)
 
 			fmt.Println(perminentFile)
 		}
@@ -135,9 +138,3 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
 }
-
-
-
-
-
-
