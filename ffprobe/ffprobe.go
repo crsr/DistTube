@@ -1,11 +1,10 @@
 // Credit to https://github.com/BenLubar for original code :)
 package ffprobe
 
-
 import (
-	"time"
-	"os/exec"
 	"encoding/json"
+	"os/exec"
+	"time"
 )
 
 //Struct containing metadata about a video file
@@ -27,20 +26,19 @@ func (f ProbeFormat) StartTime() time.Duration {
 	return time.Duration(f.StartTimeSeconds * float64(time.Second))
 }
 
-
 func (f ProbeFormat) Duration() time.Duration {
 	return time.Duration(f.DurationSeconds * float64(time.Second))
 }
 
 //Struct containing stream info and metadata
 type ProbeData struct {
-	Streams []Stream   `json:"streams,omitempty"`
-	Format ProbeFormat `json:"format,omitempty"`
+	Streams []Stream    `json:"streams,omitempty"`
+	Format  ProbeFormat `json:"format,omitempty"`
 }
 
 //Contains the height and width of a video in pixels
 type Stream struct {
-	Width uint64 `json:"width"`
+	Width  uint64 `json:"width"`
 	Height uint64 `json:"height"`
 }
 

@@ -29,6 +29,7 @@ type config struct {
 	VideoDir string `json:"video_dir"`
 	TempDir  string `json:"temp_dir"`
 }
+
 //Default config values
 var conf = config{
 	":8080",
@@ -90,7 +91,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	case "GET":
 		display(w, "upload", nil)
 
-	//POST takes the uploaded file(s) and saves it to disk.
+		//POST takes the uploaded file(s) and saves it to disk.
 	case "POST":
 		//parse the multipart form in the request
 		err := r.ParseMultipartForm(100000)
@@ -104,7 +105,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 
 		//get the *fileHeaders
 		files := m.File["myfiles"]
-		for i, _ := range files {
+		for i := range files {
 			//for each fileHeader, get a handle to the actual file
 			file, err := files[i].Open()
 			defer file.Close()
