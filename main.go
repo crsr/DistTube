@@ -1,15 +1,15 @@
 package main
 
 import (
-	"net/http"
-	"os"
-	"io"
-	"html/template"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/pwed/disttube/ffmpeg"
-	"strings"
+	"html/template"
+	"io"
+	"net/http"
+	"os"
 	"path/filepath"
+	"strings"
 )
 
 //Compile templates on start
@@ -21,7 +21,7 @@ func display(w http.ResponseWriter, tmpl string, data interface{}) {
 }
 
 const (
-	temp = "temp/"
+	temp   = "temp/"
 	videos = "videos/"
 )
 
@@ -37,19 +37,19 @@ func main() {
 	mx := mux.NewRouter()
 
 	mx.HandleFunc("/",
-		func(w http.ResponseWriter, r *http.Request){
+		func(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte("hello"))
 		})
 
 	mx.HandleFunc("/channel/{channel}",
-		func(w http.ResponseWriter, r *http.Request){
+		func(w http.ResponseWriter, r *http.Request) {
 			v := mux.Vars(r)
 			channel := v["channel"]
 
 			w.Write([]byte("the channel is " + channel))
 		})
 	mx.HandleFunc("/channel/{channel}/video/{video}",
-		func(w http.ResponseWriter, r *http.Request){
+		func(w http.ResponseWriter, r *http.Request) {
 			v := mux.Vars(r)
 			channel := v["channel"]
 			video := v["video"]
@@ -58,13 +58,9 @@ func main() {
 			w.Write([]byte("\nthe video is " + video))
 		})
 
-
 	mx.HandleFunc("/upload", uploadHandler)
 
 	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("assets"))))
-
-
-
 
 	fmt.Println("test")
 	http.ListenAndServe(":8080", mx)
@@ -92,7 +88,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 
 		//get the *fileheaders
 		files := m.File["myfiles"]
-		for i, _ := range files {
+		for i := range files {
 			//for each fileheader, get a handle to the actual file
 			file, err := files[i].Open()
 			defer file.Close()
@@ -102,7 +98,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			//create destination file making sure the path is writeable.
 			tempfile := temp + files[i].Filename
-			filename :=  files[i].Filename
+			filename := files[i].Filename
 			dst, err := os.Create(tempfile)
 			defer dst.Close()
 			if err != nil {
@@ -126,9 +122,3 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
 }
-
-
-
-
-
-

@@ -1,14 +1,11 @@
 // Credit to https://github.com/BenLubar for original code :)
 package ffprobe
 
-
 import (
 	"encoding/json"
 	"os/exec"
 	"time"
 )
-
-
 
 type ProbeFormat struct {
 	Filename         string            `json:"filename"`
@@ -33,12 +30,12 @@ func (f ProbeFormat) Duration() time.Duration {
 }
 
 type ProbeData struct {
-	Streams []Stream   `json:"streams,omitempty"`
-	Format ProbeFormat `json:"format,omitempty"`
+	Streams []Stream    `json:"streams,omitempty"`
+	Format  ProbeFormat `json:"format,omitempty"`
 }
 
 type Stream struct {
-	Width uint64 `json:"width"`
+	Width  uint64 `json:"width"`
 	Height uint64 `json:"height"`
 }
 

@@ -1,12 +1,12 @@
 package ffmpeg
 
 import (
-	"fmt"
-	"os/exec"
 	"errors"
-	"os"
-	"log"
+	"fmt"
 	"github.com/pwed/disttube/ffprobe"
+	"log"
+	"os"
+	"os/exec"
 )
 
 func Encode(ffmpegLocation string, input string, resolution string, output string) error {
@@ -20,7 +20,7 @@ func Encode(ffmpegLocation string, input string, resolution string, output strin
 }
 
 func BatchEncode(ffmpegLocation string, input string, outputs ...string) error {
-	if len(outputs) % 2 != 0 {
+	if len(outputs)%2 != 0 {
 		return errors.New("ffmpeg: number of arguments was incorrect")
 	}
 
@@ -39,7 +39,7 @@ func BatchEncode(ffmpegLocation string, input string, outputs ...string) error {
 }
 
 func Ingest(f string, i string, s string, o string) {
-	err := Encode(f, i, o + ".mp4", s)
+	err := Encode(f, i, o+".mp4", s)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -48,16 +48,16 @@ func Ingest(f string, i string, s string, o string) {
 
 func BulkBatchIngest(f string, i string, o string) {
 	BatchEncode(f, i,
-		"480x234",   o + "_234p.mp4",
-		"640x360",   o + "_360p.mp4",
-		"1280x720",  o + "_720p.mp4",
-		"1920x1080", o + "_1080p.mp4",
-		"2560x1440", o + "_1440p.mp4",
-		"3840x2160", o + "_2160p.mp4")
+		"480x234", o+"_234p.mp4",
+		"640x360", o+"_360p.mp4",
+		"1280x720", o+"_720p.mp4",
+		"1920x1080", o+"_1080p.mp4",
+		"2560x1440", o+"_1440p.mp4",
+		"3840x2160", o+"_2160p.mp4")
 	os.Remove(i)
 }
 
-func GetResolution(i string) (uint64, uint64){
+func GetResolution(i string) (uint64, uint64) {
 	p, err := ffprobe.Probe(i)
 	if err != nil {
 
@@ -69,11 +69,11 @@ func GetResolution(i string) (uint64, uint64){
 }
 
 func SequentialBatchIngest(f string, i string, o string) {
-	Encode(f, i, "480x234",   o + "_234p.mp4")
-	Encode(f, i, "640x360",   o + "_360p.mp4")
-	Encode(f, i, "1280x720",  o + "_720p.mp4")
-	Encode(f, i, "1920x1080", o + "_1080p.mp4")
-	Encode(f, i, "2560x1440", o + "_1440p.mp4")
-	Encode(f, i, "3840x2160", o + "_2160p.mp4")
+	Encode(f, i, "480x234", o+"_234p.mp4")
+	Encode(f, i, "640x360", o+"_360p.mp4")
+	Encode(f, i, "1280x720", o+"_720p.mp4")
+	Encode(f, i, "1920x1080", o+"_1080p.mp4")
+	Encode(f, i, "2560x1440", o+"_1440p.mp4")
+	Encode(f, i, "3840x2160", o+"_2160p.mp4")
 	os.Remove(i)
 }
