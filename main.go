@@ -1,15 +1,18 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
-	"github.com/gorilla/mux"
-	"github.com/pwed/disttube/ffmpeg"
 	"html/template"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/gorilla/mux"
+
+	"github.com/pwed/disttube/ffmpeg"
 )
 
 //Compile templates on start
@@ -20,20 +23,35 @@ func display(w http.ResponseWriter, tmpl string, data interface{}) {
 	templates.ExecuteTemplate(w, tmpl+".html", data)
 }
 
-const (
-	temp   = "temp/"
-	videos = "videos/"
-)
+//A struct containing the configuration parameters of the running program
+type config struct {
+	Port     string `json:"port"`
+	VideoDir string `json:"video_dir"`
+	TempDir  string `json:"temp_dir"`
+}
+//Default config values
+var conf = config{
+	":8080",
+	"videos/",
+	"temp/"}
 
+//Set up the environment before running the application
 func init() {
+	configFile, err := os.Open("config.json")
+	defer configFile.Close()
+	if err != nil {
 
-	os.Mkdir(temp, 0777)
-	os.Mkdir(videos, 0777)
+	}
+	jsonParser := json.NewDecoder(configFile)
+	if err = jsonParser.Decode(&conf); err != nil {
+		fmt.Printf("parsing config file: %v", err.Error())
+	}
+	os.Mkdir(conf.VideoDir, 0777)
+	os.Mkdir(conf.TempDir, 0777)
 }
 
+//main :)
 func main() {
-
-	fmt.Println("test")
 	mx := mux.NewRouter()
 
 	mx.HandleFunc("/",
@@ -60,15 +78,13 @@ func main() {
 
 	mx.HandleFunc("/upload", uploadHandler)
 
-	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("assets"))))
+	mx.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("assets"))))
 
-	fmt.Println("test")
-	http.ListenAndServe(":8080", mx)
+	http.ListenAndServe(conf.Port, mx)
 }
 
-//This is where the action happens.
+//Handles multi file video uploads and passes them on to the video transcoder
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("test")
 	switch r.Method {
 	//GET displays the upload form.
 	case "GET":
@@ -86,20 +102,20 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		//get a ref to the parsed multipart form
 		m := r.MultipartForm
 
-		//get the *fileheaders
+		//get the *fileHeaders
 		files := m.File["myfiles"]
-		for i := range files {
-			//for each fileheader, get a handle to the actual file
+		for i, _ := range files {
+			//for each fileHeader, get a handle to the actual file
 			file, err := files[i].Open()
 			defer file.Close()
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			//create destination file making sure the path is writeable.
-			tempfile := temp + files[i].Filename
+			//create destination file making sure the path is writable.
+			tempFile := conf.TempDir + files[i].Filename
 			filename := files[i].Filename
-			dst, err := os.Create(tempfile)
+			dst, err := os.Create(tempFile)
 			defer dst.Close()
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -110,9 +126,9 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			perminentFile := videos + strings.TrimSuffix(filename, filepath.Ext(filename))
+			perminentFile := conf.VideoDir + strings.TrimSuffix(filename, filepath.Ext(filename))
 
-			go ffmpeg.SequentialBatchIngest("ffmpeg", tempfile, perminentFile)
+			go ffmpeg.SequentialBatchIngest("ffmpeg", tempFile, perminentFile)
 
 			fmt.Println(perminentFile)
 		}
