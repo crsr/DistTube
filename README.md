@@ -1,3 +1,5 @@
+[![Go Report Card](https://goreportcard.com/badge/github.com/pwed/disttube)](https://goreportcard.com/report/github.com/pwed/disttube)
+
 # DistTube
 **A decentralized video hosting platform.**
 
