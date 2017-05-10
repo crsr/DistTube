@@ -44,6 +44,12 @@ Open `localhost:8080` in your browser.
 
 Have fun.
 
+## Contribution
+
+If you want to contribute, please do.
+
+Submit a pull request, or feel free to contact me directly. I look forward to collaborating with others.
+
 ## TODO
 
 - [x] Ingestion _(is mostly working :D )_

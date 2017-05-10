@@ -10,10 +10,10 @@ import (
 	"path/filepath"
 
 	"github.com/gorilla/mux"
-
-	"github.com/pwed/disttube/ffmpeg"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+
+	"github.com/pwed/disttube/ffmpeg"
 )
 
 //Compile templates on start
