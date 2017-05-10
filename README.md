@@ -55,3 +55,4 @@ Have fun.
 - [ ] Config File Setup
 - [ ] Docker Container
 - [ ] Aggregation Server
+- [ ] MPEG-DASH support

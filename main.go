@@ -8,11 +8,12 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/gorilla/mux"
 
 	"github.com/pwed/disttube/ffmpeg"
+	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 )
 
 //Compile templates on start
@@ -34,7 +35,10 @@ type config struct {
 var conf = config{
 	":8080",
 	"videos/",
-	"temp/"}
+	"temp/",
+}
+
+var db *mgo.Session
 
 //Set up the environment before running the application
 func init() {
@@ -45,10 +49,16 @@ func init() {
 	}
 	jsonParser := json.NewDecoder(configFile)
 	if err = jsonParser.Decode(&conf); err != nil {
-		fmt.Printf("parsing config file: %v", err.Error())
+		fmt.Printf("parsing config file: %v \n", err.Error())
 	}
 	os.Mkdir(conf.VideoDir, 0777)
 	os.Mkdir(conf.TempDir, 0777)
+
+	db, err = mgo.Dial("localhost")
+	if err != nil {
+		fmt.Printf("error connecting to the database: %v \n", err.Error())
+		panic(err)
+	}
 }
 
 //main :)
@@ -113,10 +123,20 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
+
+			c := db.DB("disttube").C("videos")
+
+			id := bson.NewObjectId()
+
 			//create destination file making sure the path is writable.
-			tempFile := conf.TempDir + files[i].Filename
-			filename := files[i].Filename
+			fileName := files[i].Filename
+			tempFile := conf.TempDir +
+				//string(id) +
+				fileName
 			dst, err := os.Create(tempFile)
+
+			c.UpsertId(id, tempFile)
+
 			defer dst.Close()
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -127,7 +147,9 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			perminentFile := conf.VideoDir + strings.TrimSuffix(filename, filepath.Ext(filename))
+			perminentFile := conf.VideoDir +
+				//string(id) +
+				filepath.Ext(fileName)
 
 			go ffmpeg.SequentialBatchIngest("ffmpeg", tempFile, perminentFile)
 
