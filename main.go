@@ -12,7 +12,7 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/pwed/disttube/ffmpeg"
+	"github.com/pwed/DistTube/ffmpeg"
 )
 
 //Compile templates on start
