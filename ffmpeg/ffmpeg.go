@@ -7,7 +7,7 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/pwed/disttube/ffprobe"
+	"github.com/pwed/DistTube/ffprobe"
 )
 
 //Encodes a single file to a given resolution and output file
